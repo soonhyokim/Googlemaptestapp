@@ -92,7 +92,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 if(mMap == null){return;}
         LatLng current = new LatLng(
                 location.getLatitude(), location.getLongitude());
-        mMap.addMarker(new MarkerOptions().position(current).title("You are here"));
+        mMap.addMarker(new MarkerOptions().position(current).title("You are here!"));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 16f));
     }
 
