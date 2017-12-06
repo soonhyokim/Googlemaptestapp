@@ -19,8 +19,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.ClusterManager;
+
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -30,6 +34,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleApiClient client;
     private LocationRequest request;
     private FusedLocationProviderApi api;
+    private ClusterManager<MyItem> mClusterManager;
+    private int CameraCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +44,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //허가 확인 및 요구
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -48,7 +54,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
 
         //위치정보의 요청정보를 취득
-        request =LocationRequest.create()
+        request = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(1000)
                 .setFastestInterval(15);
@@ -60,6 +66,44 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+    }
+
+    //getter map
+    public GoogleMap getMap() {
+        return mMap;
+    }
+
+    private void setUpClusterer() {
+        // Position the map.
+        getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(51.503186, -0.126446), 10));
+
+        // Initialize the manager with the context and the map.
+        // (Activity extends context, so we can pass 'this' in the constructor.)
+        mClusterManager = new ClusterManager<>(this, getMap());
+
+        // Point the map's listeners at the listeners implemented by the cluster
+        // manager.
+        getMap().setOnCameraIdleListener(mClusterManager);
+        getMap().setOnMarkerClickListener(mClusterManager);
+
+        // Add cluster items (markers) to the cluster manager.
+        addItems();
+    }
+
+    private void addItems() {
+
+        // Set some lat/lng coordinates to start with.
+        double lat = 35.4744480;
+        double lng = 139.5798730;
+
+        // Add ten cluster items in close proximity, for purposes of this example.
+        for (int i = 0; i < 10; i++) {
+            double offset = i / 60d;
+            lat = lat + offset;
+            lng = lng + offset;
+            MyItem offsetItem = new MyItem(lat, lng);
+            mClusterManager.addItem(offsetItem);
+        }
     }
 
     /**
@@ -77,8 +121,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // 기본 표시위치 설정
         LatLng current = new LatLng(37.6, 127);
-        mMap.addMarker(new MarkerOptions().position(current).alpha(0.5f).rotation(4f).title("You are here"));
+
+
+        // mMap.addMarker(new MarkerOptions()
+        //        .position(current)
+        //        .title("You are here"));
+
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 20f));
+        setUpClusterer();
     }
 
     @Override
@@ -89,21 +139,46 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     //위치정보가 변경될때 카메라 위치도 같이 변경
     @Override
     public void onLocationChanged(Location location) {
-if(mMap == null){return;}
+        if (mMap == null) {
+            return;
+        }
         LatLng current = new LatLng(
                 location.getLatitude(), location.getLongitude());
-        mMap.addMarker(new MarkerOptions().position(current).title("You are here!"));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 16f));
+
+        //지역1 ( 데이터 베이스에서 현재위치를 기반으로 쿼리해서 해당되는 위치 정보를 받아옴)
+        LatLng location1 = new LatLng(35.4744471, 139.5798732);
+        //지역2
+        LatLng location2 = new LatLng(35.4744366, 139.5803447);
+
+        // 지역1 위치
+        mMap.addMarker(new MarkerOptions()
+                .position(location1)
+                .title("aojora park"));
+        // 지역2 위치
+        mMap.addMarker(new MarkerOptions()
+                .position(location2)
+                .title("seintsu house"));
+        //현재위치 마커
+
+        mMap.addMarker(new MarkerOptions().position(current).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("You are here!"));
+        if (CameraCount == 0) {// 카메라를 위치를 처음만 받음
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 10f, 0, 0)));
+        }
+        CameraCount = 1;
+        //animateCamera를 사용하면 현재위치를 카메라가 따라감
+        //근데 moveCamera도 현재위치가 바뀌면 따라가게 되버림 미세한 오차가 발생할 경우 처리가 필요
+        //터치리스너를 사용해서 터치한후에는 따라 가지 않도록 구현할 필요가 있어보임
+        //나중에 정보뷰 인텐트로 넘어오는 경우와 이벤트 찾기 기능을 나눠서 if문으로 제어해줄 필요가 있어보임
     }
 
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         // ACCESS_FINE_LOCATION의 허가를 확인
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        api.requestLocationUpdates(client,request,this);
+        api.requestLocationUpdates(client, request, this);
     }
 
     @Override
@@ -114,7 +189,7 @@ if(mMap == null){return;}
     @Override
     protected void onResume() {
         super.onResume();
-        if(client != null){
+        if (client != null) {
             client.connect();
         }
     }
@@ -123,10 +198,11 @@ if(mMap == null){return;}
     protected void onPause() {
         super.onPause();
         // 위치정보 요구 해제 및 구글 플레이 접속 끊음
-        if (client != null && client.isConnected()){
+        if (client != null && client.isConnected()) {
             api.removeLocationUpdates(client, this);
         }
         client.disconnect();
     }
 
 }
+
