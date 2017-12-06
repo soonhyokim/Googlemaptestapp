@@ -73,7 +73,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return mMap;
     }
 
-    private void setUpClusterer() {
+    private void setUpClusterer() {//나중에는 커스텀마커클러스터링으로 바꿔야함, 알고리즘을 커스터마이징해야함
         // Position the map.
         getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(51.503186, -0.126446), 10));
 
