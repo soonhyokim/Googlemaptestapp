@@ -8,6 +8,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -22,13 +28,22 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.ClusterManager;
 
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener,
+        GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
+
+    // 마커 클릭시 지도 밑에 뜰 이벤트 정보 뷰
+    private RelativeLayout relativeLayout;
+    private ImageView imageView;
+    private TextView textView;
+
 
     private GoogleMap mMap;
     private GoogleApiClient client;
@@ -36,11 +51,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderApi api;
     private ClusterManager<MyItem> mClusterManager;
     private int CameraCount = 0;
+    private int markerClickCounter = 0;
+
+    // 지역 데이터, 나중엔 데이터 베이스에서 현재위치를 기반으로 쿼리해서 해당되는 위치 정보를 받아옴)
+    private static final LatLng Aojora = new LatLng(35.4744471, 139.5798732);
+    private static final LatLng Seintsu = new LatLng(35.4744366, 139.5803447);
+    //좌표 임시 저장
+    private LatLng tempLatLng;
+
+    private Marker mAojora;
+    private Marker mSeintsu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        //이벤트 정보뷰의 레이아웃을 연결
+        relativeLayout = (RelativeLayout) findViewById(R.id.info_view);
+        textView = (TextView) findViewById(R.id.text_view);
 
         //허가 확인 및 요구
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -66,6 +95,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
+
     }
 
     //getter map
@@ -123,12 +154,31 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng current = new LatLng(37.6, 127);
 
 
+        // 지역1 위치
+        mAojora = mMap.addMarker(new MarkerOptions()
+                .position(Aojora)
+                .title("aojora park"));
+        mAojora.setTag(0);
+
+        // 지역2 위치
+        mSeintsu = mMap.addMarker(new MarkerOptions()
+                .position(Seintsu)
+                .title("seintsu house"));
+        mSeintsu.setTag(1);
+
+        // Set a listener for marker click.
+
+
         // mMap.addMarker(new MarkerOptions()
         //        .position(current)
         //        .title("You are here"));
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 20f));
+
         setUpClusterer();
+
+        mMap.setOnMapClickListener(this);
+        mMap.setOnMarkerClickListener(this); // 리스너를 맨밑에 놓지 않으면 작동을 안함 ..
     }
 
     @Override
@@ -145,22 +195,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng current = new LatLng(
                 location.getLatitude(), location.getLongitude());
 
-        //지역1 ( 데이터 베이스에서 현재위치를 기반으로 쿼리해서 해당되는 위치 정보를 받아옴)
-        LatLng location1 = new LatLng(35.4744471, 139.5798732);
-        //지역2
-        LatLng location2 = new LatLng(35.4744366, 139.5803447);
+        // 현재 위치 마커
+        mMap.addMarker(new MarkerOptions().position(current).
+                icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                .title("You are here!"));
 
-        // 지역1 위치
-        mMap.addMarker(new MarkerOptions()
-                .position(location1)
-                .title("aojora park"));
-        // 지역2 위치
-        mMap.addMarker(new MarkerOptions()
-                .position(location2)
-                .title("seintsu house"));
-        //현재위치 마커
-
-        mMap.addMarker(new MarkerOptions().position(current).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title("You are here!"));
         if (CameraCount == 0) {// 카메라를 위치를 처음만 받음
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 10f, 0, 0)));
         }
@@ -171,7 +210,44 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //나중에 정보뷰 인텐트로 넘어오는 경우와 이벤트 찾기 기능을 나눠서 if문으로 제어해줄 필요가 있어보임
     }
 
+    /**
+     * Called when the user clicks a marker.
+     */
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        // Retrieve the data from the marker.
+        Integer clickCount = (Integer) marker.getTag();
 
+        //마커 클릭시 이벤트 정보뷰가 가시화됨
+        relativeLayout.setVisibility(View.VISIBLE);
+        textView.setText(marker.getTitle());
+
+        //좌표를 임시적으로 저장
+        tempLatLng = marker.getPosition();
+
+        // Check if a click count was set, then display the click count.
+        if (clickCount != null) {
+            clickCount = clickCount + 1;
+            marker.setTag(clickCount);
+            Toast.makeText(this,
+                    marker.getTitle() +
+                            " has been clicked " + clickCount + " times.",
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        // Return false to indicate that we have not consumed the event and that we wish
+        // for the default behavior to occur (which is for the camera to move such that the
+        // marker is centered and for the marker's info window to open, if it has one).
+        return false;
+    }
+
+    // 임의의 맵을 클릭 했을때 해당 좌표를 인수로 넘김
+    @Override
+    public void onMapClick(LatLng latLng) {
+        Log.i("a", "mapclicked" + latLng);
+        if (tempLatLng != latLng) relativeLayout.setVisibility(View.INVISIBLE);
+
+    }
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         // ACCESS_FINE_LOCATION의 허가를 확인
@@ -203,6 +279,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         client.disconnect();
     }
+
 
 }
 
