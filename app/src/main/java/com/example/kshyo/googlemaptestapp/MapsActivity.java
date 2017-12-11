@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -25,9 +26,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.ClusterManager;
@@ -56,11 +57,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     // 지역 데이터, 나중엔 데이터 베이스에서 현재위치를 기반으로 쿼리해서 해당되는 위치 정보를 받아옴)
     private static final LatLng Aojora = new LatLng(35.4744471, 139.5798732);
     private static final LatLng Seintsu = new LatLng(35.4744366, 139.5803447);
+    private static final LatLng BoundLeft = new LatLng(35.47, 139.58);
+    private static final LatLng BoundRight = new LatLng(35.5, 139.60);
+    //지도 줌아웃 제한 경계
+    private LatLngBounds ADELAIDE = new LatLngBounds(
+            new LatLng(35.47, 139.58), new LatLng(35.5, 139.60));
+
     //좌표 임시 저장
     private LatLng tempLatLng;
+    //지도 위치 요청 코드>= 0
+    private static final int MY_LOCATION_REQUEST_CODE = 1;
 
     private Marker mAojora;
     private Marker mSeintsu;
+    private Marker mleft;
+    private Marker mRight;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +118,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void setUpClusterer() {//나중에는 커스텀마커클러스터링으로 바꿔야함, 알고리즘을 커스터마이징해야함
         // Position the map.
-        getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(51.503186, -0.126446), 10));
+        getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(35.48, 139.59), 13));
 
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
@@ -165,18 +177,40 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .position(Seintsu)
                 .title("seintsu house"));
         mSeintsu.setTag(1);
+// 경계 지점 마커 감잡기용
+        mleft = mMap.addMarker(new MarkerOptions()
+                .position(BoundLeft)
+                .title("left bound"));
+        mSeintsu.setTag(1);
 
-        // Set a listener for marker click.
+        mRight = mMap.addMarker(new MarkerOptions()
+                .position(BoundRight)
+                .title("right bound"));
+        mSeintsu.setTag(1);
 
 
         // mMap.addMarker(new MarkerOptions()
         //        .position(current)
         //        .title("You are here"));
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 20f));
-
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ADELAIDE.getCenter(), 12f));
+        //마커 클러스터
         setUpClusterer();
+        //지도 경계 설정
+        mMap.setLatLngBoundsForCameraTarget(ADELAIDE);
 
+        //줌 인/아웃 제한
+        mMap.setMinZoomPreference(12.0f);
+
+        // 본인 위치로
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mMap.setMyLocationEnabled(true);
+        } else {
+            Toast.makeText(this, "we need your permission to find event around you", Toast.LENGTH_SHORT).show();
+            // Show rationale and request permission.
+        }
+
+        // Set a listener for marker click.
         mMap.setOnMapClickListener(this);
         mMap.setOnMarkerClickListener(this); // 리스너를 맨밑에 놓지 않으면 작동을 안함 ..
     }
@@ -195,15 +229,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng current = new LatLng(
                 location.getLatitude(), location.getLongitude());
 
-        // 현재 위치 마커
-        mMap.addMarker(new MarkerOptions().position(current).
-                icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                .title("You are here!"));
 
         if (CameraCount == 0) {// 카메라를 위치를 처음만 받음
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 10f, 0, 0)));
         }
+
+        //카메라 위치를 더이상 받지 않고자 카운트함
         CameraCount = 1;
+
         //animateCamera를 사용하면 현재위치를 카메라가 따라감
         //근데 moveCamera도 현재위치가 바뀌면 따라가게 되버림 미세한 오차가 발생할 경우 처리가 필요
         //터치리스너를 사용해서 터치한후에는 따라 가지 않도록 구현할 필요가 있어보임
@@ -248,6 +281,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (tempLatLng != latLng) relativeLayout.setVisibility(View.INVISIBLE);
 
     }
+
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         // ACCESS_FINE_LOCATION의 허가를 확인
@@ -261,6 +295,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onConnectionSuspended(int i) {
 
     }
+
 
     @Override
     protected void onResume() {
