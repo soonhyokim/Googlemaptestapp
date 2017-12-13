@@ -31,6 +31,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 //
 
@@ -38,7 +40,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
-        GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
+        GoogleMap.OnMarkerClickListener,
+        GoogleMap.OnMapClickListener,
+        ClusterManager.OnClusterClickListener<MyItem>, ClusterManager.OnClusterItemClickListener<MyItem> {
 
     // 마커 클릭시 지도 밑에 뜰 이벤트 정보 뷰
     private RelativeLayout relativeLayout;
@@ -72,6 +76,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Marker mSeintsu;
     private Marker mleft;
     private Marker mRight;
+    private String name;
 
 
     @Override
@@ -123,30 +128,39 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, getMap());
-
+        mClusterManager.setAlgorithm(new MyAlgorithm<>());
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         getMap().setOnCameraIdleListener(mClusterManager);
         getMap().setOnMarkerClickListener(mClusterManager);
-
+        //클러스터 아이템 선택
+        mClusterManager.setOnClusterItemClickListener(this);
+        mClusterManager.setOnClusterClickListener(this);
         // Add cluster items (markers) to the cluster manager.
         addItems();
+        mClusterManager.cluster();// 정확한 기능 설명 필요
     }
 
     private void addItems() {
-
+        // 테스트용
         // Set some lat/lng coordinates to start with.
         double lat = 35.4744480;
         double lng = 139.5798730;
 
         // Add ten cluster items in close proximity, for purposes of this example.
         for (int i = 0; i < 10; i++) {
-            double offset = i / 60d;
+            double offset = i / 1000d;
             lat = lat + offset;
             lng = lng + offset;
-            MyItem offsetItem = new MyItem(lat, lng);
+            name = String.valueOf(offset);
+            MyItem offsetItem = new MyItem(lat, lng, name);
             mClusterManager.addItem(offsetItem);
         }
+
+        //데이터 베이스에서 위치 정보 받아와서 마커로 표시
+        //따로 데이터베이스에서 위치정보를 가져오는 메소드를 만들 필요가 있음
+        //MyItem eventItem = new MyItem(lat, lng);
+        //mClusterManager.addItem(eventItem);
     }
 
     /**
@@ -180,11 +194,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 // 경계 지점 마커 감잡기용
         mleft = mMap.addMarker(new MarkerOptions()
                 .position(BoundLeft)
+                .alpha(0.1f)
                 .title("left bound"));
         mSeintsu.setTag(1);
 
         mRight = mMap.addMarker(new MarkerOptions()
                 .position(BoundRight)
+                .alpha(0.1f)
                 .title("right bound"));
         mSeintsu.setTag(1);
 
@@ -192,14 +208,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // mMap.addMarker(new MarkerOptions()
         //        .position(current)
         //        .title("You are here"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ADELAIDE.getCenter(), 12f));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ADELAIDE.getCenter(), 15f));
         //마커 클러스터
         setUpClusterer();
         //지도 경계 설정
         mMap.setLatLngBoundsForCameraTarget(ADELAIDE);
 
         //줌 인/아웃 제한
-        mMap.setMinZoomPreference(12.0f);
+        mMap.setMinZoomPreference(10.0f);
 
         // 본인 위치로
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -210,7 +226,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Show rationale and request permission.
         }
 
-        // Set a listener for marker click.
         mMap.setOnMapClickListener(this);
         mMap.setOnMarkerClickListener(this); // 리스너를 맨밑에 놓지 않으면 작동을 안함 ..
     }
@@ -231,7 +246,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         if (CameraCount == 0) {// 카메라를 위치를 처음만 받음
-            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 10f, 0, 0)));
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 15f, 0, 0)));
         }
 
         //카메라 위치를 더이상 받지 않고자 카운트함
@@ -274,6 +289,55 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
+    @Override
+    public boolean onClusterClick(Cluster<MyItem> cluster) {
+        // Show a toast with some info when the cluster is clicked.
+        String firstName = cluster.getItems().iterator().next().getName();
+        Toast.makeText(this, cluster.getSize() + " (including " + firstName + ")", Toast.LENGTH_SHORT).show();
+
+        // Zoom in the cluster. Need to create LatLngBounds and including all the cluster items
+        // inside of bounds, then animate to center of the bounds.
+
+        // Create the builder to collect all essential cluster items for the bounds.
+        LatLngBounds.Builder builder = LatLngBounds.builder();
+        for (ClusterItem item : cluster.getItems()) {
+            builder.include(item.getPosition());
+        }
+        // Get the LatLngBounds
+        final LatLngBounds bounds = builder.build();
+
+        // Animate camera to the bounds
+        try {
+            getMap().animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onClusterItemClick(MyItem myItem) {
+        //마커 클릭시 이벤트 정보뷰가 가시화됨
+        relativeLayout.setVisibility(View.VISIBLE);
+        Toast.makeText(this, "clicked clusterItemInfo", Toast.LENGTH_SHORT).show();
+        textView.setText(myItem.getName());
+        return false;
+    }
+
+    /* 쓸지 안쓸지 아직 모르겠음
+    private class MyItemRenderer extends DefaultClusterRenderer<MyItem> {
+        public MyItemRenderer(Context context, GoogleMap map, ClusterManager<MyItem> clusterManager) {
+            super(context, map, clusterManager);
+        }
+
+        @Override
+        protected boolean shouldRenderAsCluster(Cluster cluster) {
+            // Always render clusters.
+            return cluster.getSize() > 1;
+        }
+    }
+    */
     // 임의의 맵을 클릭 했을때 해당 좌표를 인수로 넘김
     @Override
     public void onMapClick(LatLng latLng) {
@@ -314,7 +378,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         client.disconnect();
     }
-
 
 }
 
