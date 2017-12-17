@@ -20,7 +20,7 @@ public class MatchingDistrict {
     }
 
     public void setMyMap() {
-        for (int i = 0; i < 199; i++) {// i 위도
+        for (int i = 0; i < 199; i++) {// i 위도ㅇ
             for (int j = 0; j < 224; j++) { // j 경도
                 k += 1; //카운트
                 //일본 전 지역 위도 경도를 0.1 단위로 나눔
