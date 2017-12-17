@@ -63,6 +63,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final LatLng Seintsu = new LatLng(35.4744366, 139.5803447);
     private static final LatLng BoundLeft = new LatLng(35.47, 139.58);
     private static final LatLng BoundRight = new LatLng(35.5, 139.60);
+    private static final LatLng StandardUnitLeft = new LatLng(35.4, 139.5);
+    private static final LatLng StandardUnitRight = new LatLng(35.5, 139.6);
+
     //지도 줌아웃 제한 경계
     private LatLngBounds ADELAIDE = new LatLngBounds(
             new LatLng(35.47, 139.58), new LatLng(35.5, 139.60));
@@ -76,8 +79,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Marker mSeintsu;
     private Marker mleft;
     private Marker mRight;
+    private Marker mSUnitLeft;
+    private Marker mSUnitRight;
     private String name;
 
+    // 구역에대한 정보 획득
+    private MyDistrict myDistrict;
+    private MatchingDistrict myMathingDistrict;
+    private String nameDistrict;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,6 +213,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .title("right bound"));
         mSeintsu.setTag(1);
 
+        mleft = mMap.addMarker(new MarkerOptions()
+                .position(StandardUnitLeft)
+                .alpha(0.2f)
+                .title("a left standard unit"));
+        mSeintsu.setTag(1);
+
+        mRight = mMap.addMarker(new MarkerOptions()
+                .position(StandardUnitRight)
+                .alpha(0.2f)
+                .title("a right standard unit"));
+        mSeintsu.setTag(1);
+
 
         // mMap.addMarker(new MarkerOptions()
         //        .position(current)
@@ -244,9 +265,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng current = new LatLng(
                 location.getLatitude(), location.getLongitude());
 
+        //현재 위치를 mydistrict에 보내서 구역으로 변경
+        myDistrict = new MyDistrict(location.getLatitude(), location.getLongitude());
+        myDistrict.setLntLngList();
+
+        //matchindistrict 에 보내서 구역 이름을 획득
+        myMathingDistrict = new MatchingDistrict(myDistrict.getLntLngList());
+        nameDistrict = myMathingDistrict.getMyDistrict();
+        Log.v("nameDistrict", "District is : " + nameDistrict);
 
         if (CameraCount == 0) {// 카메라를 위치를 처음만 받음
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 15f, 0, 0)));
+
         }
 
         //카메라 위치를 더이상 받지 않고자 카운트함
