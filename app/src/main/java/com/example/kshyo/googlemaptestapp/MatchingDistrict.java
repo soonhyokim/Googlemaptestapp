@@ -8,7 +8,7 @@ class MatchingDistrict {
     private int k = 0;
     private ArrayList<Double> MyDistrictRange;
     private String myDistrict;
-    private ArrayList<String> myAllDistrict = new ArrayList<>();
+    private ArrayList<String> myAllDistrict = new ArrayList<>();//
 
     private MatchingDistrict(ArrayList<Double> mlist) {
         this.MyDistrictRange = mlist;
