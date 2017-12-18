@@ -2,24 +2,21 @@ package com.example.kshyo.googlemaptestapp;
 
 import java.util.ArrayList;
 
-/**
- * Created by kshyo on 2017-12-17.
- */
 
-public class MatchingDistrict {
+class MatchingDistrict {
 
-    int k = 0;
-    ArrayList<Double> MyDistrictRange;
-    String myDistrict;
-    ArrayList<String> myAllDistrict = new ArrayList<>();
+    private int k = 0;
+    private ArrayList<Double> MyDistrictRange;
+    private String myDistrict;
+    private ArrayList<String> myAllDistrict = new ArrayList<>();
 
-    public MatchingDistrict(ArrayList<Double> mlist) {
+    private MatchingDistrict(ArrayList<Double> mlist) {
         this.MyDistrictRange = mlist;
         if (MapsActivity.CameraCount == 0) setMyMap();
 
     }
 
-    public void setMyMap() { // 데이터
+    private void setMyMap() { // 데이터
         for (int i = 0; i < 199; i++) {// i 위도ㅇ
             for (int j = 0; j < 224; j++) { // j 경도
                 k += 1; //카운트
@@ -35,16 +32,16 @@ public class MatchingDistrict {
         }
     }
 
-    public ArrayList<Double> getMyDistrictRange() {
+    private ArrayList<Double> getMyDistrictRange() {
         return this.MyDistrictRange;
-    }
+    }//
 
-    public String getMyDistrict() {
+    private String getMyDistrict() {
         myDistrict = MapsActivity.MyMap.get(getMyDistrictRange());
         return myDistrict;
     }
 
-    public ArrayList<String> getMyAllDistrict() {
+    private ArrayList<String> getMyAllDistrict() {
 
         int len = getMyDistrict().length();
         int districtNumber = Integer.valueOf((String) getMyDistrict().subSequence(1, len)) - 226;
