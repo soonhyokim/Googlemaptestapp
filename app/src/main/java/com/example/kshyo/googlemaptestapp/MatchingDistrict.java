@@ -1,25 +1,25 @@
 package com.example.kshyo.googlemaptestapp;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by kshyo on 2017-12-17.
  */
 
 public class MatchingDistrict {
-    private HashMap<ArrayList<Double>, String> MyMap = new HashMap<>();
+
     int k = 0;
     ArrayList<Double> MyDistrictRange;
     String myDistrict;
+    ArrayList<String> myAllDistrict = new ArrayList<>();
 
     public MatchingDistrict(ArrayList<Double> mlist) {
         this.MyDistrictRange = mlist;
-        setMyMap();
+        if (MapsActivity.CameraCount == 0) setMyMap();
 
     }
 
-    public void setMyMap() {
+    public void setMyMap() { // 데이터
         for (int i = 0; i < 199; i++) {// i 위도ㅇ
             for (int j = 0; j < 224; j++) { // j 경도
                 k += 1; //카운트
@@ -30,7 +30,7 @@ public class MatchingDistrict {
                 list.add(123 + j * 0.1);
                 list.add(123.1 + j * 0.1);
                 //해쉬맵에 넣음
-                MyMap.put(list, "D" + k);
+                MapsActivity.MyMap.put(list, "D" + k);
             }
         }
     }
@@ -40,7 +40,19 @@ public class MatchingDistrict {
     }
 
     public String getMyDistrict() {
-        myDistrict = MyMap.get(getMyDistrictRange());
+        myDistrict = MapsActivity.MyMap.get(getMyDistrictRange());
         return myDistrict;
+    }
+
+    public ArrayList<String> getMyAllDistrict() {
+
+        int len = getMyDistrict().length();
+        int districtNumber = Integer.valueOf((String) getMyDistrict().subSequence(1, len)) - 226;
+        for (int s = 0; s <= 2; s++) {
+            for (int t = 1; t <= 3; t++) {
+                myAllDistrict.add("D" + (districtNumber + 224 * s + t));
+            }
+        }
+        return myAllDistrict;
     }
 }

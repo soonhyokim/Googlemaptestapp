@@ -34,6 +34,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 //
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
@@ -55,8 +58,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationRequest request;
     private FusedLocationProviderApi api;
     private ClusterManager<MyItem> mClusterManager;
-    private int CameraCount = 0;
-    private int markerClickCounter = 0;
+    private static int markerClickCounter = 0;
+    public static int CameraCount = 0;
 
     // 지역 데이터, 나중엔 데이터 베이스에서 현재위치를 기반으로 쿼리해서 해당되는 위치 정보를 받아옴)
     private static final LatLng Aojora = new LatLng(35.4744471, 139.5798732);
@@ -86,7 +89,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     // 구역에대한 정보 획득
     private MyDistrict myDistrict;
     private MatchingDistrict myMathingDistrict;
-    private String nameDistrict;
+    private ArrayList<String> nameDistrict;
+
+    public static HashMap<ArrayList<Double>, String> MyMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -213,13 +218,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .title("right bound"));
         mSeintsu.setTag(1);
 
-        mleft = mMap.addMarker(new MarkerOptions()
+        mSUnitLeft = mMap.addMarker(new MarkerOptions()
                 .position(StandardUnitLeft)
                 .alpha(0.2f)
                 .title("a left standard unit"));
         mSeintsu.setTag(1);
 
-        mRight = mMap.addMarker(new MarkerOptions()
+        mSUnitRight = mMap.addMarker(new MarkerOptions()
                 .position(StandardUnitRight)
                 .alpha(0.2f)
                 .title("a right standard unit"));
@@ -271,7 +276,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //matchindistrict 에 보내서 구역 이름을 획득
         myMathingDistrict = new MatchingDistrict(myDistrict.getLntLngList());
-        nameDistrict = myMathingDistrict.getMyDistrict();
+        nameDistrict = myMathingDistrict.getMyAllDistrict();
         Log.v("nameDistrict", "District is : " + nameDistrict);
 
         if (CameraCount == 0) {// 카메라를 위치를 처음만 받음
