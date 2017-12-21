@@ -33,6 +33,7 @@ class MatchingDistrict {
         }
     }//나중에 도쿄전용 해쉬맵, 오사카전용 해쉬맵을 나눠서 만들면 됨
 
+    //범위를 줄여야함 도쿄 등
     private ArrayList<Double> getMyDistrictRange() {
         return this.MyDistrictRange;
     }//
