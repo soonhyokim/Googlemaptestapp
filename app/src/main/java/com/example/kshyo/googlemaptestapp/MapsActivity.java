@@ -272,10 +272,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //현재 위치를 mydistrict에 보내서 구역으로 변경
         myDistrict = new MyDistrict(location.getLatitude(), location.getLongitude());
+        //자신의 위도 경도 범위를 설정
         myDistrict.setLntLngList();
 
-        //matchindistrict 에 보내서 구역 이름을 획득
+        //자신의 위도 경도 범위를 MachingDistrict 에 보내서 구역 이름을 획득
         myMathingDistrict = new MatchingDistrict(myDistrict.getLntLngList());
+
+        //데이터 베이스에 보내고자하는 모든 구역 이름을 얻어 저장
         nameDistrict = myMathingDistrict.getMyAllDistrict();
         Log.v("nameDistrict", "District is : " + nameDistrict);
 

@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * Created by kshyo on 2017-12-17.
  */
 
-public class MyDistrict {
+class MyDistrict {
 
 
     private double mLat, mLng;
@@ -21,7 +21,8 @@ public class MyDistrict {
     String d1 = "D1";
     int i;
 
-    public MyDistrict(double mLat, double mLng) {
+    // 내 구역을 계산함
+    MyDistrict(double mLat, double mLng) {
         this.mLat = mLat;
         this.mLng = mLng;
         this.minDistrictLat = (double) (Math.round(mLat * 10.0 - 0.5)) / 10.0;
@@ -30,8 +31,8 @@ public class MyDistrict {
         this.maxDistrictLng = (double) (Math.round(mLng * 10.0 + 0.5)) / 10.0;
     }
 
-
-    public void setLntLngList() {
+    // 계산한 내 구역 정보인 위도 경도 범위를 리스트에 넣음
+    void setLntLngList() {
         LntLngList.add(this.minDistrictLat);
         LntLngList.add(this.maxDistrictLat);
         LntLngList.add(this.minDistrictLng);
@@ -39,7 +40,7 @@ public class MyDistrict {
         Log.v("MyDistrict", "LntLngList : " + LntLngList);
     }
 
-    public ArrayList<Double> getLntLngList() {
+    ArrayList<Double> getLntLngList() {
         return this.LntLngList;
     }
 
