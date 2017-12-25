@@ -10,7 +10,7 @@ class MatchingDistrict {
     private String myDistrict;
     private ArrayList<String> myAllDistrict = new ArrayList<>();//
 
-    private MatchingDistrict(ArrayList<Double> mlist) {
+    MatchingDistrict(ArrayList<Double> mlist) {
         this.MyDistrictRange = mlist;
         if (MapsActivity.CameraCount == 0) setMyMap();
 
@@ -41,7 +41,7 @@ class MatchingDistrict {
         return myDistrict;
     }
 
-    private ArrayList<String> getMyAllDistrict() {
+    ArrayList<String> getMyAllDistrict() {
 
         int len = getMyDistrict().length();
         int districtNumber = Integer.valueOf((String) getMyDistrict().subSequence(1, len)) - 226;

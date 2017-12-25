@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 //
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
+class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
