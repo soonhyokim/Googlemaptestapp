@@ -8,25 +8,17 @@ import java.util.ArrayList;
  * Created by kshyo on 2017-12-25.
  */
 
-public class EventData {
+class EventData extends ArrayList{
     private LatLng latLng;
     private String name;
-    private ArrayList arrayList;
 
-    public ArrayList EventData(String mName, LatLng mLatLng) {
-        arrayList.add(mName);
-        arrayList.add(mLatLng);
-        return arrayList;
+    public  EventData(String mName, LatLng mLatLng) {
+        this.latLng = mLatLng;
+        this.name = mName;
+        super.add(mName);
+        super.add(mLatLng);
     }
 
-
-    public void setLatLng(LatLng latLng) {
-        this.latLng = latLng;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public LatLng getLatLng() {
         return latLng;
