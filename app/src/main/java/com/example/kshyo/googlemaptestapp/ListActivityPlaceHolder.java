@@ -30,7 +30,7 @@ public class ListActivityPlaceHolder extends AppCompatActivity {
         ArrayAdapter adapter;
 
 
-        data = new EventData("TokyoTower", tokyoTower);
+        data = new EventData("TokyoTower", tokyoTower);//
         data = new EventData("SkyTree", skyTree);
 
         super.onCreate(savedInstanceState);
