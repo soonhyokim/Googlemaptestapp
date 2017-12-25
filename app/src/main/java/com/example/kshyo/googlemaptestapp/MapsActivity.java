@@ -11,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -60,7 +61,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderApi api;
     private ClusterManager<MyItem> mClusterManager;
     private static int markerClickCounter = 0;
-    //   public static int CameraCount = 0;
+    public static int CameraCount = 0;
 
     // 지역 데이터, 나중엔 데이터 베이스에서 현재위치를 기반으로 쿼리해서 해당되는 위치 정보를 받아옴)
     private static final LatLng Aojora = new LatLng(35.4744471, 139.5798732);
@@ -312,7 +313,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         myMathingDistrict = new MatchingDistrict(myDistrict.getLntLngList());
         nameDistrict = myMathingDistrict.getMyAllDistrict();
         Log.v("nameDistrict", "District is : " + nameDistrict);
-
+        //setHashMap을 로딩시 한번만 하기 위함
+        CameraCount = 1;
 
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 15f, 0, 0)));
 
@@ -332,6 +334,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //마커 클릭시 이벤트 정보뷰가 가시화됨
         relativeLayout.setVisibility(View.VISIBLE);
+        relativeLayout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                Intent intent = new Intent(this, EventInfoActivity.this);
+                return false;
+            }
+        });
         textView.setText(marker.getTitle());
 
         //좌표를 임시적으로 저장
