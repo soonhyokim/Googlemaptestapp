@@ -12,13 +12,20 @@ class EventData extends ArrayList{
     private LatLng latLng;
     private String name;
 
-    public  EventData(String mName, LatLng mLatLng) {
-        this.latLng = mLatLng;
-        this.name = mName;
-        super.add(mName);
-        super.add(mLatLng);
+    public EventData(ArrayList list) {
+        super.add(list);
+        setName((String) list.get(0));
+        setLatLng((LatLng) list.get(1));
     }
 
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setLatLng(LatLng latLng) {
+        this.latLng = latLng;
+    }
 
     public LatLng getLatLng() {
         return latLng;
