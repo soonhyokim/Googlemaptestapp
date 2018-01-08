@@ -62,7 +62,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ClusterManager<MyItem> mClusterManager;
     private static int markerClickCounter = 0;
     public static int CameraCount = 0;
-
+    public static int CameraCount2 = 0;
     // 지역 데이터, 나중엔 데이터 베이스에서 현재위치를 기반으로 쿼리해서 해당되는 위치 정보를 받아옴)
     private static final LatLng Aojora = new LatLng(35.4744471, 139.5798732);
     private static final LatLng Seintsu = new LatLng(35.4744366, 139.5803447);
@@ -99,6 +99,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     //인텐트 관련
     Bundle bundle;
     private LatLng solidLoaction = null;
+    Intent InfIntent = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +111,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         relativeLayout = (RelativeLayout) findViewById(R.id.info_view);
         textView = (TextView) findViewById(R.id.text_view);
 
+        //이벤트 정보 엑티비티로 넘어가는 인텐트 생성
+        InfIntent = new Intent(this, EventInfoActivity.class);
         //허가 확인 및 요구
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -206,7 +210,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.v("solidLocation", String.valueOf(solidLoaction));
         } else {
             solidLoaction = null;
-            current = new LatLng(37.6, 127);
+            current = new LatLng(35.6, 138);
         }
 
         // 기본 표시위치 설정
@@ -263,10 +267,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //마커 클러스터
         setUpClusterer();
         //지도 경계 설정
-        //   mMap.setLatLngBoundsForCameraTarget(ADELAIDE);
+        mMap.setLatLngBoundsForCameraTarget(ADELAIDE);
 
         //줌 인/아웃 제한
-        //  mMap.setMinZoomPreference(1f);
+        mMap.setMinZoomPreference(5f);
 
         // 본인 위치로
         if (solidLoaction == null) {
@@ -279,7 +283,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 15f, 0, 0)));
         } else {
-            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 15f, 0, 0)));
+            //solidplace
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 10f, 0, 0)));
         }
 
         mMap.setOnMapClickListener(this);
@@ -313,10 +318,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         myMathingDistrict = new MatchingDistrict(myDistrict.getLntLngList());
         nameDistrict = myMathingDistrict.getMyAllDistrict();
         Log.v("nameDistrict", "District is : " + nameDistrict);
-        //setHashMap을 로딩시 한번만 하기 위함
-        CameraCount = 1;
 
+        //로딩시 한번만 카메라 움직임
+        if (CameraCount2 == 1) {
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(current, 15f, 0, 0)));
+            CameraCount2 = 0;
+        }
+        //setHashMap을 로딩시 한번만 하기 위한 것과 카메라 한번만 변화시키기
+        CameraCount = 1;
 
         //animateCamera를 사용하면 현재위치를 카메라가 따라감
         //근데 moveCamera도 현재위치가 바뀌면 따라가게 되버림 미세한 오차가 발생할 경우 처리가 필요
@@ -337,7 +346,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         relativeLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                Intent intent = new Intent(this, EventInfoActivity.this);
+                startActivity(InfIntent);
                 return false;
             }
         });

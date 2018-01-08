@@ -41,13 +41,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".EventInfoActivity"
-            android:label="eventInfoView"></activity>
+
         <activity
             android:name=".MapsActivity"
             android:label="@string/title_activity_maps"></activity>
-
+        <activity
+            android:name=".EventInfoActivity"
+            android:label="eventInfoView"></activity>
     </application>
 
 </manifest>

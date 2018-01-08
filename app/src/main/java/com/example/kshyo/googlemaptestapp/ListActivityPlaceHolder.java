@@ -71,6 +71,7 @@ public class ListActivityPlaceHolder extends AppCompatActivity {
     // 바로 블루맵으로 이동 == 자기 위치 에 따른 쿼리
     public void BluemapIntent(View view) {
         intent = new Intent(this, MapsActivity.class);
+        MapsActivity.CameraCount2 = 1;
         startActivity(intent);
     }
 }
